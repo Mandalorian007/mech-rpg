@@ -2,22 +2,26 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Settings, Zap, Target } from 'lucide-react';
+import { ArrowLeft, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { lightMechs, mediumMechs, largeMechs, siegeMechs, components, armorTypes } from '@/content';
 import { MechChassis, Component, ArmorType } from '@/lib/types';
 
+interface SlotData {
+  type: 'hardpoint' | 'equipment';
+  component: Component | null;
+}
+
 interface MechSection {
   name: string;
+  totalSlots: number;
   hardpoints: number;
-  weapons: (Component | null)[];
-  equipment: Component[];
+  slots: SlotData[];
   armorTonnage: number;
   armorHP: number;
 }
@@ -44,35 +48,99 @@ export default function BuilderPage(): React.JSX.Element {
     chassis: null,
     armorType: null,
     sections: {
-      head: { name: 'Head', hardpoints: 0, weapons: [], equipment: [], armorTonnage: 0, armorHP: 0 },
-      leftTorso: { name: 'Left Torso', hardpoints: 0, weapons: [], equipment: [], armorTonnage: 0, armorHP: 0 },
-      centerTorso: { name: 'Center Torso', hardpoints: 0, weapons: [], equipment: [], armorTonnage: 0, armorHP: 0 },
-      rightTorso: { name: 'Right Torso', hardpoints: 0, weapons: [], equipment: [], armorTonnage: 0, armorHP: 0 },
-      leftArm: { name: 'Left Arm', hardpoints: 0, weapons: [], equipment: [], armorTonnage: 0, armorHP: 0 },
-      rightArm: { name: 'Right Arm', hardpoints: 0, weapons: [], equipment: [], armorTonnage: 0, armorHP: 0 },
-      leftLeg: { name: 'Left Leg', hardpoints: 0, weapons: [], equipment: [], armorTonnage: 0, armorHP: 0 },
-      rightLeg: { name: 'Right Leg', hardpoints: 0, weapons: [], equipment: [], armorTonnage: 0, armorHP: 0 },
+      head: { name: 'Head', totalSlots: 0, hardpoints: 0, slots: [], armorTonnage: 0, armorHP: 0 },
+      leftTorso: { name: 'Left Torso', totalSlots: 0, hardpoints: 0, slots: [], armorTonnage: 0, armorHP: 0 },
+      centerTorso: { name: 'Center Torso', totalSlots: 0, hardpoints: 0, slots: [], armorTonnage: 0, armorHP: 0 },
+      rightTorso: { name: 'Right Torso', totalSlots: 0, hardpoints: 0, slots: [], armorTonnage: 0, armorHP: 0 },
+      leftArm: { name: 'Left Arm', totalSlots: 0, hardpoints: 0, slots: [], armorTonnage: 0, armorHP: 0 },
+      rightArm: { name: 'Right Arm', totalSlots: 0, hardpoints: 0, slots: [], armorTonnage: 0, armorHP: 0 },
+      leftLeg: { name: 'Left Leg', totalSlots: 0, hardpoints: 0, slots: [], armorTonnage: 0, armorHP: 0 },
+      rightLeg: { name: 'Right Leg', totalSlots: 0, hardpoints: 0, slots: [], armorTonnage: 0, armorHP: 0 },
     }
   });
 
   const allMechs = [...lightMechs, ...mediumMechs, ...largeMechs, ...siegeMechs];
-  const weaponComponents = components.filter(c => c.projectileCount !== undefined);
+  const allComponents = components; // Show all components in every dropdown
+
+  const createSlots = (totalSlots: number, hardpoints: number): SlotData[] => {
+    const slots: SlotData[] = [];
+    
+    // First N slots are marked as hardpoints (visual indicator only)
+    for (let i = 0; i < hardpoints; i++) {
+      slots.push({ type: 'hardpoint', component: null });
+    }
+    
+    // Remaining slots are marked as equipment (visual indicator only)
+    for (let i = hardpoints; i < totalSlots; i++) {
+      slots.push({ type: 'equipment', component: null });
+    }
+    
+    return slots;
+  };
 
   const updateChassisHardpoints = (chassis: MechChassis): void => {
+    console.log('Selected chassis:', chassis.name);
+    console.log('Chassis slots:', chassis.slots);
+    console.log('Chassis hardpoints:', chassis.hardpoints);
+    
     setMechBuild(prev => ({
       ...prev,
       chassis,
       sections: {
-        head: { ...prev.sections.head, hardpoints: chassis.hardpoints.head, weapons: new Array(chassis.hardpoints.head).fill(null) },
-        leftTorso: { ...prev.sections.leftTorso, hardpoints: chassis.hardpoints.leftTorso, weapons: new Array(chassis.hardpoints.leftTorso).fill(null) },
-        centerTorso: { ...prev.sections.centerTorso, hardpoints: chassis.hardpoints.centerTorso, weapons: new Array(chassis.hardpoints.centerTorso).fill(null) },
-        rightTorso: { ...prev.sections.rightTorso, hardpoints: chassis.hardpoints.rightTorso, weapons: new Array(chassis.hardpoints.rightTorso).fill(null) },
-        leftArm: { ...prev.sections.leftArm, hardpoints: chassis.hardpoints.leftArm, weapons: new Array(chassis.hardpoints.leftArm).fill(null) },
-        rightArm: { ...prev.sections.rightArm, hardpoints: chassis.hardpoints.rightArm, weapons: new Array(chassis.hardpoints.rightArm).fill(null) },
-        leftLeg: { ...prev.sections.leftLeg, hardpoints: chassis.hardpoints.leftLeg, weapons: new Array(chassis.hardpoints.leftLeg).fill(null) },
-        rightLeg: { ...prev.sections.rightLeg, hardpoints: chassis.hardpoints.rightLeg, weapons: new Array(chassis.hardpoints.rightLeg).fill(null) },
+        head: { 
+          ...prev.sections.head, 
+          totalSlots: chassis.slots.head,
+          hardpoints: chassis.hardpoints.head,
+          slots: createSlots(chassis.slots.head, chassis.hardpoints.head)
+        },
+        leftTorso: { 
+          ...prev.sections.leftTorso, 
+          totalSlots: chassis.slots.leftTorso,
+          hardpoints: chassis.hardpoints.leftTorso,
+          slots: createSlots(chassis.slots.leftTorso, chassis.hardpoints.leftTorso)
+        },
+        centerTorso: { 
+          ...prev.sections.centerTorso, 
+          totalSlots: chassis.slots.centerTorso,
+          hardpoints: chassis.hardpoints.centerTorso,
+          slots: createSlots(chassis.slots.centerTorso, chassis.hardpoints.centerTorso)
+        },
+        rightTorso: { 
+          ...prev.sections.rightTorso, 
+          totalSlots: chassis.slots.rightTorso,
+          hardpoints: chassis.hardpoints.rightTorso,
+          slots: createSlots(chassis.slots.rightTorso, chassis.hardpoints.rightTorso)
+        },
+        leftArm: { 
+          ...prev.sections.leftArm, 
+          totalSlots: chassis.slots.leftArm,
+          hardpoints: chassis.hardpoints.leftArm,
+          slots: createSlots(chassis.slots.leftArm, chassis.hardpoints.leftArm)
+        },
+        rightArm: { 
+          ...prev.sections.rightArm, 
+          totalSlots: chassis.slots.rightArm,
+          hardpoints: chassis.hardpoints.rightArm,
+          slots: createSlots(chassis.slots.rightArm, chassis.hardpoints.rightArm)
+        },
+        leftLeg: { 
+          ...prev.sections.leftLeg, 
+          totalSlots: chassis.slots.leftLeg,
+          hardpoints: chassis.hardpoints.leftLeg,
+          slots: createSlots(chassis.slots.leftLeg, chassis.hardpoints.leftLeg)
+        },
+        rightLeg: { 
+          ...prev.sections.rightLeg, 
+          totalSlots: chassis.slots.rightLeg,
+          hardpoints: chassis.hardpoints.rightLeg,
+          slots: createSlots(chassis.slots.rightLeg, chassis.hardpoints.rightLeg)
+        },
       }
     }));
+    
+    console.log('Updated sections will have:');
+    console.log('Head: totalSlots =', chassis.slots.head, 'hardpoints =', chassis.hardpoints.head);
+    console.log('Left Arm: totalSlots =', chassis.slots.leftArm, 'hardpoints =', chassis.hardpoints.leftArm);
   };
 
   // Recalculate all armor HP when armor type changes
@@ -110,17 +178,17 @@ export default function BuilderPage(): React.JSX.Element {
     }));
   };
 
-  const assignWeapon = (sectionKey: keyof typeof mechBuild.sections, hardpointIndex: number, weapon: Component | null): void => {
+  const assignSlotComponent = (sectionKey: keyof typeof mechBuild.sections, slotIndex: number, component: Component | null): void => {
     setMechBuild(prev => {
-      const newWeapons = [...prev.sections[sectionKey].weapons];
-      newWeapons[hardpointIndex] = weapon;
+      const newSlots = [...prev.sections[sectionKey].slots];
+      newSlots[slotIndex] = { ...newSlots[slotIndex], component };
       return {
         ...prev,
         sections: {
           ...prev.sections,
           [sectionKey]: {
             ...prev.sections[sectionKey],
-            weapons: newWeapons
+            slots: newSlots
           }
         }
       };
@@ -135,17 +203,10 @@ export default function BuilderPage(): React.JSX.Element {
       total += section.armorTonnage;
     });
     
-    // Add weapon tonnage
+    // Add component tonnage from all slots
     Object.values(mechBuild.sections).forEach(section => {
-      section.weapons.forEach(weapon => {
-        if (weapon) total += weapon.tonnage;
-      });
-    });
-    
-    // Add equipment tonnage
-    Object.values(mechBuild.sections).forEach(section => {
-      section.equipment.forEach(equipment => {
-        total += equipment.tonnage;
+      section.slots.forEach(slot => {
+        if (slot.component) total += slot.component.tonnage;
       });
     });
     
@@ -156,13 +217,13 @@ export default function BuilderPage(): React.JSX.Element {
     return Object.values(mechBuild.sections).reduce((total, section) => total + section.armorHP, 0);
   };
 
-  const calculateTotalHardpoints = (): number => {
-    return Object.values(mechBuild.sections).reduce((total, section) => total + section.hardpoints, 0);
+  const calculateTotalSlots = (): number => {
+    return Object.values(mechBuild.sections).reduce((total, section) => total + section.totalSlots, 0);
   };
 
-  const getUsedHardpoints = (): number => {
+  const getUsedSlots = (): number => {
     return Object.values(mechBuild.sections).reduce((total, section) => {
-      return total + section.weapons.filter(w => w !== null).length;
+      return total + section.slots.filter(slot => slot.component !== null).length;
     }, 0);
   };
 
@@ -177,310 +238,238 @@ export default function BuilderPage(): React.JSX.Element {
 
   const SectionCard = ({ 
     sectionKey, 
-    section, 
-    showHardpoints = true 
+    section
   }: { 
     sectionKey: keyof typeof mechBuild.sections; 
-    section: MechSection; 
-    showHardpoints?: boolean;
-  }): React.JSX.Element => (
-    <Card className="h-full">
-      <CardHeader className="pb-4">
-        <CardTitle className="text-lg flex items-center justify-between">
-          {section.name}
-          {section.hardpoints > 0 && (
-            <Badge variant="outline" className="ml-2">
-              {section.weapons.filter(w => w !== null).length}/{section.hardpoints} HP
+    section: MechSection;
+  }): React.JSX.Element => {
+    const usedSlots = section.slots.filter(slot => slot.component !== null).length;
+    
+    return (
+      <Card className="h-full">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center justify-between">
+            {section.name}
+            <Badge variant="secondary" className="text-xs">
+              {usedSlots}/{section.totalSlots}
             </Badge>
-          )}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Hardpoints */}
-        {showHardpoints && section.hardpoints > 0 && (
-          <div className="space-y-2">
-            <Label className="text-xs font-medium text-muted-foreground">WEAPON HARDPOINTS</Label>
-            {section.weapons.map((weapon, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <Badge variant="secondary" className="w-8 h-6 flex items-center justify-center text-xs">
-                  {index + 1}
-                </Badge>
-                <Select
-                  value={weapon?.name || 'empty'}
-                  onValueChange={(value: string) => {
-                    const selectedWeapon = value === 'empty' ? null : weaponComponents.find(w => w.name === value) || null;
-                    assignWeapon(sectionKey, index, selectedWeapon);
-                  }}
-                >
-                  <SelectTrigger className="flex-1 h-8">
-                    <SelectValue placeholder="Select weapon..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="empty">Empty</SelectItem>
-                    {weaponComponents.map(weapon => (
-                      <SelectItem key={weapon.name} value={weapon.name}>
-                        {weapon.name} ({weapon.tonnage}t)
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 pb-3">
+          {/* Slots */}
+          {section.slots.length > 0 && (
+            <div className="space-y-1">
+              <Label className="text-xs font-medium text-muted-foreground">
+                SLOTS
+              </Label>
+              <div className="space-y-1">
+                {section.slots.map((slot, index) => {
+                  const isHardpoint = slot.type === 'hardpoint';
+                  
+                  return (
+                    <div key={index} className="flex items-center gap-1">
+                      <Badge 
+                        variant={isHardpoint ? "destructive" : "outline"} 
+                        className="w-6 h-5 flex items-center justify-center text-xs flex-shrink-0"
+                      >
+                        {index + 1}
+                      </Badge>
+                      <Select
+                        value={slot.component?.name || 'empty'}
+                        onValueChange={(value: string) => {
+                          const selectedComponent = value === 'empty' ? null : allComponents.find(c => c.name === value) || null;
+                          assignSlotComponent(sectionKey, index, selectedComponent);
+                        }}
+                      >
+                        <SelectTrigger className="flex-1 h-6 text-xs">
+                          <SelectValue placeholder="Empty" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="empty">Empty</SelectItem>
+                          {allComponents.map(component => (
+                            <SelectItem key={component.name} value={component.name}>
+                              {component.name} ({component.tonnage}t)
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  );
+                })}
               </div>
-            ))}
-          </div>
-        )}
-
-        {/* Armor */}
-        <div className="space-y-2">
-          <Label className="text-xs font-medium text-muted-foreground">ARMOR ALLOCATION</Label>
-          <div className="flex items-center gap-2">
-            <Input
-              type="number"
-              value={section.armorTonnage}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateArmorAllocation(sectionKey, Number(e.target.value) || 0)}
-              className="w-20 h-8 text-center"
-              min="0"
-              step="0.25"
-              disabled={!mechBuild.armorType}
-            />
-            <span className="text-xs text-muted-foreground">tons</span>
-            <Separator orientation="vertical" className="h-4" />
-            <Badge variant="outline" className="text-xs font-mono">
-              {section.armorHP} HP
-            </Badge>
-          </div>
-          {mechBuild.armorType && (
-            <div className="text-xs text-muted-foreground">
-              {section.armorTonnage}t × {mechBuild.armorType.hpPerTon} HP/t = {section.armorHP} HP
             </div>
           )}
-        </div>
-      </CardContent>
-    </Card>
-  );
+
+          {/* Compact Armor */}
+          <div className="space-y-1">
+            <Label className="text-xs font-medium text-muted-foreground">ARMOR</Label>
+            <div className="flex items-center gap-1">
+              <Input
+                type="number"
+                value={section.armorTonnage}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateArmorAllocation(sectionKey, Number(e.target.value) || 0)}
+                className="w-12 h-6 text-xs text-center p-1"
+                min="0"
+                step="0.25"
+                disabled={!mechBuild.armorType}
+              />
+              <span className="text-xs text-muted-foreground">t</span>
+              <Badge variant="outline" className="text-xs font-mono h-5">
+                {section.armorHP}hp
+              </Badge>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-12">
-        <div className="mb-8">
+      <div className="container mx-auto px-4 py-4">
+        {/* Compact Header */}
+        <div className="flex items-center justify-between mb-4">
           <Button variant="ghost" asChild className="hover:bg-muted/50">
             <Link href="/" className="flex items-center gap-2">
               <ArrowLeft className="w-4 h-4" />
-              Return to Command Center
+              Return
             </Link>
           </Button>
+          <h1 className="text-2xl font-bold">Mech Builder</h1>
+          <div className="w-20"></div>
         </div>
 
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-6 py-3 bg-muted/50 backdrop-blur rounded-full text-muted-foreground text-sm font-medium mb-8 border border-muted-foreground/20">
-              <Settings className="w-4 h-4" />
-              Mech Configuration System • Classification: RESTRICTED
-            </div>
-            
-            <h1 className="text-5xl md:text-7xl font-bold mb-8 tracking-tight">
-              Mech <span className="bg-gradient-to-r from-primary via-primary/80 to-muted-foreground bg-clip-text text-transparent">Builder</span>
-            </h1>
-            
-            <p className="text-xl text-muted-foreground max-w-4xl mx-auto leading-relaxed">
-              Advanced mech configuration interface for tactical deployment planning. 
-              Configure chassis, weapons, armor, and equipment loadouts.
-            </p>
-          </div>
+        {/* Horizontal Configuration & Stats */}
+        <div className="grid grid-cols-12 gap-4 mb-4">
+          {/* Configuration */}
+          <div className="col-span-8">
+            <Card className="h-fit">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Target className="w-4 h-4" />
+                  Configuration
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="mech-name" className="text-xs">Designation</Label>
+                    <Input
+                      id="mech-name"
+                      value={mechBuild.name}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMechBuild(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="Mech name..."
+                      className="h-8"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="chassis-select" className="text-xs">Chassis *</Label>
+                    <Select
+                      value={mechBuild.chassis?.name || ''}
+                      onValueChange={(value: string) => {
+                        const chassis = allMechs.find(m => m.name === value);
+                        if (chassis) updateChassisHardpoints(chassis);
+                      }}
+                    >
+                      <SelectTrigger id="chassis-select" className="h-8">
+                        <SelectValue placeholder="Select chassis..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {allMechs.map(mech => (
+                          <SelectItem key={mech.name} value={mech.name}>
+                            {mech.name} ({mech.tonnage}t)
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-          {/* Configuration Panel */}
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Target className="w-5 h-5" />
-                Basic Configuration
-              </CardTitle>
-              <CardDescription>
-                Select chassis and armor type to begin mech configuration
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid md:grid-cols-4 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="mech-name">Mech Designation</Label>
-                  <Input
-                    id="mech-name"
-                    value={mechBuild.name}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMechBuild(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="Enter mech name..."
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="chassis-select">Chassis Type *</Label>
-                  <Select
-                    value={mechBuild.chassis?.name || ''}
-                    onValueChange={(value: string) => {
-                      const chassis = allMechs.find(m => m.name === value);
-                      if (chassis) updateChassisHardpoints(chassis);
-                    }}
-                  >
-                    <SelectTrigger id="chassis-select">
-                      <SelectValue placeholder="Select chassis..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {allMechs.map(mech => (
-                        <SelectItem key={mech.name} value={mech.name}>
-                          {mech.name} ({mech.tonnage}t • {mech.mechType})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="armor-select" className="text-xs">Armor *</Label>
+                    <Select
+                      value={mechBuild.armorType?.name || ''}
+                      onValueChange={(value: string) => {
+                        const armor = armorTypes.find(a => a.name === value);
+                        setMechBuild(prev => ({ ...prev, armorType: armor || null }));
+                      }}
+                    >
+                      <SelectTrigger id="armor-select" className="h-8">
+                        <SelectValue placeholder="Select armor..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {armorTypes.map(armor => (
+                          <SelectItem key={armor.name} value={armor.name}>
+                            {armor.name} ({armor.hpPerTon}/t)
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="armor-select">Armor Type *</Label>
-                  <Select
-                    value={mechBuild.armorType?.name || ''}
-                    onValueChange={(value: string) => {
-                      const armor = armorTypes.find(a => a.name === value);
-                      setMechBuild(prev => ({ ...prev, armorType: armor || null }));
-                    }}
-                  >
-                    <SelectTrigger id="armor-select">
-                      <SelectValue placeholder="Select armor..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {armorTypes.map(armor => (
-                        <SelectItem key={armor.name} value={armor.name}>
-                          {armor.name} ({armor.hpPerTon} HP/ton)
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Configuration Status</Label>
-                  <div className="flex flex-col gap-2">
-                    <Badge variant={mechBuild.chassis ? 'default' : 'destructive'}>
-                      {mechBuild.chassis ? '✓ Chassis Set' : '✗ No Chassis'}
-                    </Badge>
-                    <Badge variant={mechBuild.armorType ? 'default' : 'destructive'}>
-                      {mechBuild.armorType ? '✓ Armor Set' : '✗ No Armor'}
-                    </Badge>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Status</Label>
+                    {!isConfigurationValid() ? (
+                      <div className="p-2 bg-destructive/10 border border-destructive/20 rounded text-xs text-destructive font-medium">
+                        ⚠️ Select chassis & armor
+                      </div>
+                    ) : (
+                      <div className="p-2 bg-green-500/10 border border-green-500/20 rounded text-xs text-green-700 font-medium">
+                        ✓ Ready to configure
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
+              </CardContent>
+            </Card>
+          </div>
 
-              {!isConfigurationValid() && (
-                <div className="mt-4 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
-                  <p className="text-sm text-destructive font-medium">
-                    ⚠️ Required: Select both chassis and armor type to proceed with configuration
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Stats Overview */}
-          {isConfigurationValid() && (
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-              <Card className="text-center">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-2xl font-bold">{mechBuild.chassis!.tonnage}t</CardTitle>
-                  <CardDescription>Maximum Weight</CardDescription>
-                </CardHeader>
-              </Card>
-              <Card className="text-center">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-2xl font-bold">{calculateUsedTonnage().toFixed(1)}t</CardTitle>
-                  <CardDescription>Used Weight</CardDescription>
-                </CardHeader>
-              </Card>
-              <Card className="text-center">
-                <CardHeader className="pb-4">
-                  <CardTitle className={`text-2xl font-bold ${getRemainingTonnage() < 0 ? 'text-destructive' : ''}`}>
-                    {getRemainingTonnage().toFixed(1)}t
-                  </CardTitle>
-                  <CardDescription>Remaining Weight</CardDescription>
-                </CardHeader>
-              </Card>
-              <Card className="text-center">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-2xl font-bold">{getUsedHardpoints()}/{calculateTotalHardpoints()}</CardTitle>
-                  <CardDescription>Hardpoints Used</CardDescription>
-                </CardHeader>
-              </Card>
-              <Card className="text-center">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-2xl font-bold">{calculateTotalArmor()}</CardTitle>
-                  <CardDescription>Total Armor HP</CardDescription>
-                </CardHeader>
-              </Card>
-            </div>
-          )}
-
-          {/* Mech Structure */}
-          {isConfigurationValid() ? (
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Zap className="w-5 h-5" />
-                    Mech Structure Configuration
-                  </CardTitle>
-                  <CardDescription>
-                    Configure weapons and armor for each mech section • {mechBuild.armorType!.name} armor selected ({mechBuild.armorType!.hpPerTon} HP/ton)
-                  </CardDescription>
+          {/* Stats */}
+          <div className="col-span-4">
+            {isConfigurationValid() && (
+              <Card className="h-fit">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg">Stats</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid gap-6">
-                    {/* Head */}
-                    <div className="grid md:grid-cols-1 gap-4">
-                      <SectionCard sectionKey="head" section={mechBuild.sections.head} />
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Weight:</span>
+                      <span className="font-mono">{calculateUsedTonnage().toFixed(1)}/{mechBuild.chassis!.tonnage}t</span>
                     </div>
-
-                    {/* Torso Row */}
-                    <div className="grid md:grid-cols-3 gap-4">
-                      <SectionCard sectionKey="leftTorso" section={mechBuild.sections.leftTorso} />
-                      <SectionCard sectionKey="centerTorso" section={mechBuild.sections.centerTorso} />
-                      <SectionCard sectionKey="rightTorso" section={mechBuild.sections.rightTorso} />
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Remaining:</span>
+                      <span className={`font-mono ${getRemainingTonnage() < 0 ? 'text-destructive' : ''}`}>
+                        {getRemainingTonnage().toFixed(1)}t
+                      </span>
                     </div>
-
-                    {/* Arms Row */}
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <SectionCard sectionKey="leftArm" section={mechBuild.sections.leftArm} />
-                      <SectionCard sectionKey="rightArm" section={mechBuild.sections.rightArm} />
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Armor HP:</span>
+                      <span className="font-mono">{calculateTotalArmor()}</span>
                     </div>
-
-                    {/* Legs Row */}
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <SectionCard sectionKey="leftLeg" section={mechBuild.sections.leftLeg} showHardpoints={false} />
-                      <SectionCard sectionKey="rightLeg" section={mechBuild.sections.rightLeg} showHardpoints={false} />
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Slots:</span>
+                      <span className="font-mono">{getUsedSlots()}/{calculateTotalSlots()}</span>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-            </div>
-          ) : (
-            <Card className="text-center py-16">
-              <CardContent>
-                <Settings className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-                <h3 className="text-2xl font-bold mb-2">Configuration Required</h3>
-                <p className="text-muted-foreground mb-6">
-                  Select both a mech chassis and armor type in the configuration panel above to begin building your custom mech.
-                </p>
-                <div className="flex justify-center gap-4">
-                  <Button asChild>
-                    <Link href="/mechs">Browse Chassis Database</Link>
-                  </Button>
-                  <Button variant="outline" asChild>
-                    <Link href="/armor">View Armor Systems</Link>
-                  </Button>
-                  <Button variant="ghost" asChild>
-                    <Link href="/components">Browse Components</Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+            )}
+          </div>
         </div>
+
+        {/* Full-Width Mech Sections */}
+        {isConfigurationValid() && (
+          <div className="grid grid-cols-4 gap-4 h-[calc(100vh-280px)]">
+            {Object.entries(mechBuild.sections).map(([key, section]) => (
+              <SectionCard 
+                key={key} 
+                sectionKey={key as keyof typeof mechBuild.sections} 
+                section={section} 
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

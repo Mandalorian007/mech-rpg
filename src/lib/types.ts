@@ -19,6 +19,7 @@ export interface MechChassis {
   baseSpeed: number;
   hexSpeed: number;
   hardpoints: HardpointLayout;
+  slots: SlotLayout;
   description?: string;
 }
 
@@ -30,6 +31,17 @@ export enum MechType {
 }
 
 export interface HardpointLayout {
+  head: number;
+  leftArm: number;
+  leftTorso: number;
+  centerTorso: number;
+  rightTorso: number;
+  rightArm: number;
+  leftLeg: number;
+  rightLeg: number;
+}
+
+export interface SlotLayout {
   head: number;
   leftArm: number;
   leftTorso: number;

@@ -1,4 +1,4 @@
-import { MechChassis, MechType } from '@/lib/types';
+import { MechChassis, MechType, SlotLayout } from '@/lib/types';
 
 // Mech chassis data organized by type from Google Sheets
 // Sources: 
@@ -6,6 +6,56 @@ import { MechChassis, MechType } from '@/lib/types';
 // Medium: https://docs.google.com/spreadsheets/d/1O7zMbApXr8qzbmsin-DGgWR7Qd3VWkAiumeEDgeIECg/edit?gid=1303703539#gid=1303703539
 // Large: https://docs.google.com/spreadsheets/d/1O7zMbApXr8qzbmsin-DGgWR7Qd3VWkAiumeEDgeIECg/edit?gid=1486854281#gid=1486854281
 // Siege: https://docs.google.com/spreadsheets/d/1O7zMbApXr8qzbmsin-DGgWR7Qd3VWkAiumeEDgeIECg/edit?gid=136474007#gid=136474007
+
+// Slot configuration by mech size (as provided by user)
+const getSlotsByMechType = (mechType: MechType): SlotLayout => {
+  switch (mechType) {
+    case MechType.LIGHT:
+      return {
+        head: 2,
+        leftArm: 4,
+        leftTorso: 7,
+        centerTorso: 2,
+        rightTorso: 7,
+        rightArm: 4,
+        leftLeg: 2,
+        rightLeg: 2
+      };
+    case MechType.MEDIUM:
+      return {
+        head: 3,
+        leftArm: 6,
+        leftTorso: 9,
+        centerTorso: 3,
+        rightTorso: 9,
+        rightArm: 6,
+        leftLeg: 3,
+        rightLeg: 3
+      };
+    case MechType.LARGE:
+      return {
+        head: 4,
+        leftArm: 8,
+        leftTorso: 11,
+        centerTorso: 4,
+        rightTorso: 11,
+        rightArm: 8,
+        leftLeg: 4,
+        rightLeg: 4
+      };
+    case MechType.SIEGE:
+      return {
+        head: 5,
+        leftArm: 10,
+        leftTorso: 13,
+        centerTorso: 5,
+        rightTorso: 13,
+        rightArm: 10,
+        leftLeg: 5,
+        rightLeg: 5
+      };
+  }
+};
 
 export const lightMechs: MechChassis[] = [
   {
@@ -24,7 +74,8 @@ export const lightMechs: MechChassis[] = [
       rightArm: 1,
       leftLeg: 0,
       rightLeg: 0
-    }
+    },
+    slots: getSlotsByMechType(MechType.LIGHT)
   },
   {
     name: "Wraith II",
@@ -42,7 +93,8 @@ export const lightMechs: MechChassis[] = [
       rightArm: 2,
       leftLeg: 0,
       rightLeg: 0
-    }
+    },
+    slots: getSlotsByMechType(MechType.LIGHT)
   },
   {
     name: "Firefly",
@@ -60,7 +112,8 @@ export const lightMechs: MechChassis[] = [
       rightArm: 3,
       leftLeg: 0,
       rightLeg: 0
-    }
+    },
+    slots: getSlotsByMechType(MechType.LIGHT)
   },
   {
     name: "Jackdaw",
@@ -78,7 +131,8 @@ export const lightMechs: MechChassis[] = [
       rightArm: 1,
       leftLeg: 0,
       rightLeg: 0
-    }
+    },
+    slots: getSlotsByMechType(MechType.LIGHT)
   },
   {
     name: "Kestrel",
@@ -96,7 +150,8 @@ export const lightMechs: MechChassis[] = [
       rightArm: 2,
       leftLeg: 0,
       rightLeg: 0
-    }
+    },
+    slots: getSlotsByMechType(MechType.LIGHT)
   },
   {
     name: "Needleback",
@@ -114,7 +169,8 @@ export const lightMechs: MechChassis[] = [
       rightArm: 2,
       leftLeg: 0,
       rightLeg: 0
-    }
+    },
+    slots: getSlotsByMechType(MechType.LIGHT)
   }
 ];
 
@@ -135,7 +191,8 @@ export const mediumMechs: MechChassis[] = [
       rightArm: 2,
       leftLeg: 0,
       rightLeg: 0
-    }
+    },
+    slots: getSlotsByMechType(MechType.MEDIUM)
   },
   {
     name: "Griffin",
@@ -153,7 +210,8 @@ export const mediumMechs: MechChassis[] = [
       rightArm: 1,
       leftLeg: 0,
       rightLeg: 0
-    }
+    },
+    slots: getSlotsByMechType(MechType.MEDIUM)
   },
   {
     name: "Wolverine",
@@ -171,7 +229,8 @@ export const mediumMechs: MechChassis[] = [
       rightArm: 3,
       leftLeg: 0,
       rightLeg: 0
-    }
+    },
+    slots: getSlotsByMechType(MechType.MEDIUM)
   },
   {
     name: "Catapult",
@@ -189,7 +248,8 @@ export const mediumMechs: MechChassis[] = [
       rightArm: 2,
       leftLeg: 0,
       rightLeg: 0
-    }
+    },
+    slots: getSlotsByMechType(MechType.MEDIUM)
   },
   {
     name: "Trebuchet",
@@ -207,7 +267,8 @@ export const mediumMechs: MechChassis[] = [
       rightArm: 1,
       leftLeg: 1,
       rightLeg: 1
-    }
+    },
+    slots: getSlotsByMechType(MechType.MEDIUM)
   }
 ];
 
@@ -228,7 +289,8 @@ export const largeMechs: MechChassis[] = [
       rightArm: 3,
       leftLeg: 1,
       rightLeg: 1
-    }
+    },
+    slots: getSlotsByMechType(MechType.LARGE)
   },
   {
     name: "Marauder",
@@ -246,7 +308,8 @@ export const largeMechs: MechChassis[] = [
       rightArm: 2,
       leftLeg: 0,
       rightLeg: 0
-    }
+    },
+    slots: getSlotsByMechType(MechType.LARGE)
   },
   {
     name: "Warhammer",
@@ -264,7 +327,8 @@ export const largeMechs: MechChassis[] = [
       rightArm: 4,
       leftLeg: 1,
       rightLeg: 1
-    }
+    },
+    slots: getSlotsByMechType(MechType.LARGE)
   },
   {
     name: "Battlemaster",
@@ -282,7 +346,8 @@ export const largeMechs: MechChassis[] = [
       rightArm: 3,
       leftLeg: 2,
       rightLeg: 2
-    }
+    },
+    slots: getSlotsByMechType(MechType.LARGE)
   },
   {
     name: "Cyclops",
@@ -300,7 +365,8 @@ export const largeMechs: MechChassis[] = [
       rightArm: 2,
       leftLeg: 1,
       rightLeg: 1
-    }
+    },
+    slots: getSlotsByMechType(MechType.LARGE)
   }
 ];
 
@@ -321,7 +387,8 @@ export const siegeMechs: MechChassis[] = [
       rightArm: 4,
       leftLeg: 2,
       rightLeg: 2
-    }
+    },
+    slots: getSlotsByMechType(MechType.SIEGE)
   },
   {
     name: "King Crab",
@@ -339,7 +406,8 @@ export const siegeMechs: MechChassis[] = [
       rightArm: 6,
       leftLeg: 2,
       rightLeg: 2
-    }
+    },
+    slots: getSlotsByMechType(MechType.SIEGE)
   },
   {
     name: "Banshee",
@@ -357,7 +425,8 @@ export const siegeMechs: MechChassis[] = [
       rightArm: 3,
       leftLeg: 3,
       rightLeg: 3
-    }
+    },
+    slots: getSlotsByMechType(MechType.SIEGE)
   },
   {
     name: "Highlander",
@@ -375,7 +444,8 @@ export const siegeMechs: MechChassis[] = [
       rightArm: 2,
       leftLeg: 4,
       rightLeg: 4
-    }
+    },
+    slots: getSlotsByMechType(MechType.SIEGE)
   }
 ];
 
